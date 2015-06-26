@@ -12,6 +12,8 @@ import dateutil.parser
 
 _DID_REEXEC_VAR = 'FAKETIME_DID_REEXEC'
 
+FAKETIME_FMT = '%Y-%m-%d %T %f %z'
+
 
 def _get_shared_lib(basename):
     return os.path.join(
@@ -77,13 +79,15 @@ class fake_time(ContextDecorator):
             _datetime = dateutil.parser.parse(datetime_spec)
 
         self.time_to_freeze = _datetime  # freezegun compatibility
-        self.libfaketime_spec = _datetime.strftime('%Y-%m-%d %T %f %z')
+        self.libfaketime_spec = _datetime.strftime(FAKETIME_FMT)
 
     def _should_fake(self):
         return self.only_main_thread and threading.current_thread().name == 'MainThread'
 
     def __enter__(self):
         if self._should_fake():
+            self._prev_fmt = os.environ.get('FAKETIME_FMT')
+            os.environ['FAKETIME_FMT'] = FAKETIME_FMT
             self._prev_spec = os.environ.get('FAKETIME')
             os.environ['FAKETIME'] = self.libfaketime_spec
 
@@ -95,6 +99,10 @@ class fake_time(ContextDecorator):
                 os.environ['FAKETIME'] = self._prev_spec
             else:
                 del os.environ['FAKETIME']
+            if self._prev_fmt is not None:
+                os.environ['FAKETIME_FMT'] = self._prev_fmt
+            else:
+                del os.environ['FAKETIME_FMT']
 
         return False
 
