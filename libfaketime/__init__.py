@@ -77,7 +77,7 @@ class fake_time(ContextDecorator):
             _datetime = dateutil.parser.parse(datetime_spec)
 
         self.time_to_freeze = _datetime  # freezegun compatibility
-        self.libfaketime_spec = _datetime.strftime('%Y-%m-%d %T %f')
+        self.libfaketime_spec = _datetime.strftime('%Y-%m-%d %T %f %z')
 
     def _should_fake(self):
         return self.only_main_thread and threading.current_thread().name == 'MainThread'
